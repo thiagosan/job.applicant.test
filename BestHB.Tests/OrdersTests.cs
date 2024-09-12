@@ -56,7 +56,7 @@ namespace BestHB.Tests
                 message = ex.Message;
             }
 
-            Assert.AreEqual("Quantidade inv�lida.", message);
+            Assert.AreEqual("Quantidade inválida.", message);
         }
     }
 }
