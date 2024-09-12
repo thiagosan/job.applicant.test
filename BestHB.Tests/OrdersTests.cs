@@ -3,60 +3,51 @@ using BestHB.Domain.Entities;
 using BestHB.Domain.Repositories;
 using BestHB.Domain.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+using NSubstitute;
 using System;
 
-namespace BestHB.Tests
+namespace BestHB.Tests;
+
+[TestClass]
+public class OrdersTest
 {
-    [TestClass]
-    public class OrdersTest
+    [TestMethod]
+    public void invalid_lot_size_on_create_order_test()
     {
-        [TestMethod]
-        public void invalid_lot_size_on_create_order_test()
+        // Arrange
+        CreateOrderCommand command = new()
         {
-            //given
-            var command = new CreateOrderCommand {
-                Price = 10,
-                Quantity = 40,
-                Side = Domain.Commands.OrderSide.Sell,
-                Symbol = "PETR4",
-                Type = Domain.Commands.OrderType.Market,
-                UserId = 123
-            };
+            Price = 10,
+            Quantity = 40,
+            Side = OrderSide.Sell,
+            Symbol = "PETR4",
+            Type = OrderType.Market,
+            UserId = 123
+        };
 
-            var instrumentInfo = new InstrumentInfo
-            {
-                Type = InstrumentType.Stock,
-                Symbol = "PETR4",
-                Description = "PETROBRAS",
-                Exchange = "BOVESPA",
-                ISIN = "123456",
-                LotStep = 100,
-                MaxLot = 100000,
-                MinLot = 100
-            };
+        InstrumentInfo instrumentInfo = new()
+        {
+            Type = InstrumentType.Stock,
+            Symbol = "PETR4",
+            Description = "PETROBRAS",
+            Exchange = "BOVESPA",
+            ISIN = "123456",
+            LotStep = 100,
+            MaxLot = 100000,
+            MinLot = 100
+        };
 
-            
-            var instrumentInfoRepositoryMock = new Mock<IRepository>();
+        IRepository instrumentInfoRepositoryMock = Substitute.For<IRepository>();
+        instrumentInfoRepositoryMock.Get(Arg.Any<string>()).Returns(instrumentInfo);
 
-            instrumentInfoRepositoryMock.Setup(i => i.Get(It.IsAny<string>())).ReturnsAsync(instrumentInfo);
+        IRepository orderRepositoryMock = Substitute.For<IRepository>();
 
-            var orderRepositoryMock = new Mock<IRepository>();
+        // Act
+        var orderService = new OrderService(orderRepositoryMock, instrumentInfoRepositoryMock);
 
-            var message = string.Empty;
+        // Assert
+        var exception = Assert.ThrowsException<Exception>(() => orderService.Create(command));
 
-            try
-            {
-                var orderService = new OrderService(orderRepositoryMock.Object, instrumentInfoRepositoryMock.Object);
-                
-                orderService.Create(command);
-            }
-            catch(Exception ex)
-            {
-                message = ex.Message;
-            }
-
-            Assert.AreEqual("Quantidade inválida.", message);
-        }
+        Assert.AreEqual("Quantidade inválida.", exception.Message);
     }
 }
