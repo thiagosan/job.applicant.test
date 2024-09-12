@@ -1,32 +1,22 @@
-﻿using System;
-using System.Threading.Tasks;
-using BestHB.Domain.Repositories;
+﻿using BestHB.Domain.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BestHB.Controllers
+namespace BestHB.Controllers;
+
+[Route("api/instrument")]
+public class InstrumentController(IRepository instrumentInfoRepository) : Controller
 {
-    [Route("api/instrument")]
-    public class InstrumentController : Controller
+    [HttpGet]
+    [Route("{symbol}")]
+    public async Task<IActionResult> Get([FromRoute] string symbol)
     {
-        private readonly IRepository _instrumentInfoRepository;
-
-        public InstrumentController(IRepository instrumentInfoRepository)
+        try
         {
-            _instrumentInfoRepository = instrumentInfoRepository;
+            return Ok(await instrumentInfoRepository.Get(symbol));
         }
-
-        [HttpGet]
-        [Route("{symbol}")]
-        public async Task<IActionResult> Get([FromRoute] string symbol)
+        catch (Exception ex)
         {
-            try
-            {
-                return Ok(await _instrumentInfoRepository.Get(symbol));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return BadRequest(ex.Message);
         }
     }
 }

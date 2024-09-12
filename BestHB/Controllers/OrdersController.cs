@@ -1,85 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BestHB.Domain.Commands;
+﻿using BestHB.Domain.Commands;
 using BestHB.Domain.Queries;
 using BestHB.Domain.Repositories;
-using BestHB.Domain.Service;
-using Microsoft.AspNetCore.Mvc;
 using BestHB.Domain.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace BestHB.Controllers
+namespace BestHB.Controllers;
+
+[Route("api/orders")]
+public class OrdersController(OrderService orderService, IRepository orderRepository) : Controller
 {
-    [Route("api/orders")]
-    public class OrdersController : Controller
+    [HttpPost]
+    [Route("add")]
+    public IActionResult Add([FromBody] CreateOrderCommand command)
     {
-        public readonly OrderService _orderService;
-        private readonly IRepository _orderRepository;
-
-        public OrdersController(OrderService orderService, IRepository orderRepository)
+        try
         {
-            _orderService = orderService;
-            _orderRepository = orderRepository;
+            var orderId = orderService.Create(command);
+            return Ok(orderId);
         }
-
-        [HttpPost]
-        [Route("add")]
-        public IActionResult Add([FromBody]CreateOrderCommand command)
+        catch (Exception ex)
         {
-            try
-            {
-                var orderId = _orderService.Create(command);
-                return Ok(orderId);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return BadRequest(ex.Message);
         }
+    }
 
-        [HttpPost]
-        [Route("delete")]
-        public IActionResult Delete([FromBody]DeleteOrderCommand command)
+    [HttpPost]
+    [Route("delete")]
+    public IActionResult Delete([FromBody] DeleteOrderCommand command)
+    {
+        try
         {
-            try
-            {
-                var status = _orderService.Delete(command);
-                return Ok(status);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var status = orderService.Delete(command);
+            return Ok(status);
         }
-
-        [HttpPost]
-        [Route("get")]
-        public async Task<IActionResult> Get([FromBody]QueryOrders queryOrders)
+        catch (Exception ex)
         {
-            try
-            {
-                var orders = await _orderRepository.Get(queryOrders);
-                return Ok(orders);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return BadRequest(ex.Message);
         }
+    }
 
-        [HttpPost]
-        [Route("csv")]
-        public async Task<IActionResult> GetAsCSV([FromBody] QueryOrders queryOrders)
+    [HttpPost]
+    [Route("get")]
+    public async Task<IActionResult> Get([FromBody] QueryOrders queryOrders)
+    {
+        try
         {
-            try
-            {
-                return Ok(await _orderService.AsCSV(queryOrders));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var orders = await orderRepository.Get(queryOrders);
+            return Ok(orders);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost]
+    [Route("csv")]
+    public async Task<IActionResult> GetAsCSV([FromBody] QueryOrders queryOrders)
+    {
+        try
+        {
+            return Ok(await orderService.AsCSV(queryOrders));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }
