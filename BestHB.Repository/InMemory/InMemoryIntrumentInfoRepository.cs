@@ -1,49 +1,44 @@
 ﻿using BestHB.Domain.Entities;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
 
-namespace BestHB.Repository.InMemory
+namespace BestHB.Repository.InMemory;
+
+internal static class InMemoryIntrumentInfoRepository
 {
-    internal static class InMemoryIntrumentInfoRepository
+    private static readonly ConcurrentDictionary<string, InstrumentInfo> _instrumentsInfo;
+    private static readonly object _readLock;
+    private static readonly object _writeLock;
+
+    static InMemoryIntrumentInfoRepository()
     {
-        private static readonly ConcurrentDictionary<string, InstrumentInfo> _instrumentsInfo;
-        private static readonly object _readLock;
-        private static readonly object _writeLock;
+        _readLock = new object();
+        _writeLock = new object();
+        _instrumentsInfo = new ConcurrentDictionary<string, InstrumentInfo>();
+    }
 
-        static InMemoryIntrumentInfoRepository()
+    public static void Add(InstrumentInfo instrumentInfo)
+    {
+        if (Get(instrumentInfo.Symbol) == null)
         {
-            _readLock = new object();
-            _writeLock = new object();
-            _instrumentsInfo = new ConcurrentDictionary<string, InstrumentInfo>();
-        }
-
-        public static void Add(InstrumentInfo instrumentInfo)
-        {
-            if (Get(instrumentInfo.Symbol) == null)
+            lock (_writeLock)
             {
-                lock (_writeLock)
-                {
-                    _instrumentsInfo.TryAdd(instrumentInfo.Symbol, instrumentInfo);
-                }
+                _instrumentsInfo.TryAdd(instrumentInfo.Symbol, instrumentInfo);
             }
         }
+    }
 
-        public static InstrumentInfo Get(string symbol)
+    public static InstrumentInfo Get(string symbol)
+    {
+        lock (_readLock)
         {
-            lock(_readLock)
+            if (_instrumentsInfo.ContainsKey(symbol))
             {
-                if(_instrumentsInfo.ContainsKey(symbol))
-                {
-                    return _instrumentsInfo[symbol];
-                }
-                else
-                {
-                    return null;
-                }
+                return _instrumentsInfo[symbol];
+            }
+            else
+            {
+                return null;
             }
         }
-
     }
 }
