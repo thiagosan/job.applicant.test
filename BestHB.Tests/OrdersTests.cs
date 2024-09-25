@@ -18,9 +18,9 @@ namespace BestHB.Tests
             var command = new CreateOrderCommand {
                 Price = 10,
                 Quantity = 40,
-                Side = Domain.Commands.OrderSide.Sell,
+                Side = OrderSide.Sell,
                 Symbol = "PETR4",
-                Type = Domain.Commands.OrderType.Market,
+                Type = OrderType.Market,
                 UserId = 123
             };
 
@@ -56,7 +56,7 @@ namespace BestHB.Tests
                 message = ex.Message;
             }
 
-            Assert.AreEqual("Quantidade inv�lida.", message);
+            Assert.AreEqual("Quantidade inválida.", message);
         }
     }
 }
